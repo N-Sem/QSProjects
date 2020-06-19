@@ -48,6 +48,10 @@ namespace QS.Project.DB
 		{
 			fluenConfig = Fluently.Configure().Database(database);
 
+			fluenConfig.Mappings(
+				x => x.FluentMappings.Conventions.Add<ObservableListConvention>()
+			);
+
 			fluenConfig.Mappings(m => {
 				foreach(var ass in assemblies) {
 					m.FluentMappings.AddFromAssembly(ass);
