@@ -404,8 +404,8 @@ namespace Gamma.GtkWidgets
 
 		public object GetSelectedObject()
 		{
-			TreeIter iter;
-			if(Selection.GetSelected(out iter))
+			TreePath[] paths = Selection.GetSelectedRows();
+			if(paths.Length > 0 && Model.GetIter(out var iter, paths[default(int)]))
 				return YTreeModel.NodeFromIter(iter);
 			else
 				return null;
@@ -413,8 +413,8 @@ namespace Gamma.GtkWidgets
 
 		public TNode GetSelectedObject<TNode>()
 		{
-			TreeIter iter;
-			if(Selection.GetSelected(out iter))
+			TreePath[] paths = Selection.GetSelectedRows();
+			if(paths.Length > 0 && Model.GetIter(out var iter, paths[default(int)]))
 				return (TNode)YTreeModel.NodeFromIter(iter);
 			else
 				return default(TNode);
