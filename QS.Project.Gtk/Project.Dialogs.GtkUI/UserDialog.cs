@@ -29,7 +29,8 @@ namespace QS.Project.Dialogs.GtkUI
 
 		private static Logger logger = LogManager.GetCurrentClassLogger();
         private readonly IInteractiveService interactiveService;
-        private const string passFill = "n0tChanG3d";
+		private readonly bool _canCreateUser;
+		private const string passFill = "n0tChanG3d";
 
 		private bool IsNewUser => User.Id == 0;
 
@@ -40,10 +41,11 @@ namespace QS.Project.Dialogs.GtkUI
 
 		public UserBase User { get; private set; }
 
-		public UserDialog(int userId, IInteractiveService interactiveService)
+		public UserDialog(int userId, IInteractiveService interactiveService, bool canCreateUser)
 		{
 			this.interactiveService = interactiveService ?? throw new ArgumentNullException(nameof(interactiveService));
-            this.Build();
+			_canCreateUser = canCreateUser;
+			this.Build();
 
 			mySQLUserRepository = new MySQLUserRepository(new MySQLProvider(new GtkRunOperationService(), new GtkQuestionDialogsInteractive()), new GtkInteractiveService());
 
@@ -140,7 +142,7 @@ namespace QS.Project.Dialogs.GtkUI
 			if(IsNewUser) {
 				mySQLUserRepository.CreateUser(User, entryPassword.Text, GetExtraFieldsForSelect(), GetExtraFieldsForInsert(), GetPermissionValues());
 			} else {
-				mySQLUserRepository.UpdateUser(User, entryPassword.Text, GetExtraFieldsForUpdate(), GetPermissionValues());
+				mySQLUserRepository.UpdateUser(User, entryPassword.Text, GetExtraFieldsForUpdate(), GetPermissionValues(), _canCreateUser);
 				userpermissionwidget.Save();
 			}
 		}

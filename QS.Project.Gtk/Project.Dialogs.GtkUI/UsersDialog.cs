@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data.Bindings.Collections.Generic;
+using System.Linq;
 using Gamma.GtkWidgets;
 using Gtk;
 using QS.Deletion;
@@ -20,11 +22,13 @@ namespace QS.Project.Dialogs.GtkUI
 		UsersModel usersModel;
 		MySQLUserRepository mySQLUserRepository;
         private readonly IInteractiveService interactiveService;
+		private readonly IEnumerable<int> _canCreateUsersUsersIds;
 
-        public UsersDialog(IInteractiveService interactiveService)
+		public UsersDialog(IInteractiveService interactiveService, IEnumerable<int> canCreateUsersUsersIds = null)
         {
 	        this.interactiveService = interactiveService ?? throw new ArgumentNullException(nameof(interactiveService));
-            this.Build();
+			_canCreateUsersUsersIds = canCreateUsersUsersIds;
+			this.Build();
 			usersModel = new UsersModel();
 			usersModel.UsersUpdated += UsersModel_UsersUpdated;
 			mySQLUserRepository = new MySQLUserRepository(new MySQLProvider(new GtkRunOperationService(), new GtkQuestionDialogsInteractive()), new GtkInteractiveService());
@@ -98,16 +102,23 @@ namespace QS.Project.Dialogs.GtkUI
 			EditUser();
 		}
 
-		private void EditUser()
-		{
-			if (treeviewUsers.GetSelectedObject() is UserBase selectedUser) {
-				UserDialog userDialog = new UserDialog(selectedUser.Id, interactiveService);
-				userDialog.ShowAll();
-				if (userDialog.Run() == (int)ResponseType.Ok)
-					usersModel.UpdateUsers(chkShowInactive.Active);
+		private void EditUser() {
+			if(!(treeviewUsers.GetSelectedObject() is UserBase selectedUser)) return;
 
-				userDialog.Destroy();
+			bool canCreateUser;
+			if(_canCreateUsersUsersIds != null && _canCreateUsersUsersIds.Contains(selectedUser.Id)) {
+				canCreateUser = true;
 			}
+			else {
+				canCreateUser = false;
+			}
+			
+			UserDialog userDialog = new UserDialog(selectedUser.Id, interactiveService, canCreateUser);
+			userDialog.ShowAll();
+			if (userDialog.Run() == (int)ResponseType.Ok)
+				usersModel.UpdateUsers(chkShowInactive.Active);
+
+			userDialog.Destroy();
 		}
 
 		protected void OnButtonAddClicked(object sender, EventArgs e)
