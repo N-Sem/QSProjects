@@ -269,7 +269,7 @@ namespace QS.Project.Repositories
 			
 		}
 
-		public void UpdatePrivileges(string login, bool isAdmin)
+		public void UpdatePrivileges(string login, bool isAdmin, bool canCreateUser = false)
 		{
 			logger.Info("Устанавливаем права...");
 			try {
@@ -283,14 +283,14 @@ namespace QS.Project.Repositories
 				MySqlCommand cmd = new MySqlCommand(sql, mysqlProvider.DbConnection);
 				cmd.Parameters.AddWithValue("@login", login);
 				cmd.ExecuteNonQuery();
-				if(isAdmin) {
+				if(isAdmin || canCreateUser) {
 					cmd.CommandText = "GRANT CREATE USER, GRANT OPTION ON *.* TO @login, @login @'localhost'";
 				} else {
 					cmd.CommandText = "REVOKE CREATE USER, GRANT OPTION ON *.* FROM @login, @login @'localhost'";
 				}
 				cmd.ExecuteNonQuery();
 				bool GrantMake = false;
-				if(isAdmin) {
+				if(isAdmin || canCreateUser) {
 					sql = "GRANT SELECT, UPDATE ON mysql.* TO @login, @login @'localhost'";
 					GrantMake = true;
 				} else {
@@ -406,7 +406,12 @@ namespace QS.Project.Repositories
 			}
 		}
 
-		public void UpdateUser(UserBase user, string password, string extraFieldsForUpdate, Dictionary<string, string> permissionsValues)
+		public void UpdateUser(
+			UserBase user,
+			string password,
+			string extraFieldsForUpdate,
+			Dictionary<string, string> permissionsValues,
+			bool canCreateUser = false)
 		{
 			var originUser = GetUser(user.Id);
 
@@ -421,7 +426,7 @@ namespace QS.Project.Repositories
 			var sql = "UPDATE users SET name = @name, deactivated = @deactivated, email = @email, login = @login, admin = @admin," +
 				  "description = @description " + extraFieldsForUpdate + " WHERE id = @id";
 
-			UpdatePrivileges(user.Login, user.IsAdmin);
+			UpdatePrivileges(user.Login, user.IsAdmin, canCreateUser);
 			logger.Info("Запись пользователя...");
 
 			try {
